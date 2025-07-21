@@ -1,0 +1,8 @@
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.csproj.AssemblyReference.cache
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.GeneratedMSBuildEditorConfig.editorconfig
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.AssemblyInfoInputs.cache
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.AssemblyInfo.cs
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.csproj.CoreCompileInputs.cache
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.MvcApplicationPartsAssemblyInfo.cs
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.MvcApplicationPartsAssemblyInfo.cache
+C:\Code\Advise-Elevator-Assignment\backend\Elevator.api\obj\Debug\net8.0\Elevator.Api.sourcelink.json
