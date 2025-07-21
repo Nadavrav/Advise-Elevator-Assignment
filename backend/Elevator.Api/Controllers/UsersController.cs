@@ -50,7 +50,7 @@ namespace Elevator.Api.Controllers
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(userLoginDto.Password, user.Password))
             {
-                return Unauthorized("Invalid credentials.");
+                return Unauthorized(new { message = "Invalid credentials." });
             }
 
             var token = CreateToken(user);
