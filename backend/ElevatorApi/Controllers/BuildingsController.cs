@@ -3,8 +3,8 @@ using ElevatorApi.DTOs;
 using ElevatorApi.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using ElevatorEntity = Elevator.Api.Entities.Elevator;
 
 namespace ElevatorApi.Controllers
 {
@@ -20,10 +20,29 @@ namespace ElevatorApi.Controllers
             _context = context;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetBuildings()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var buildings = await _context.Buildings
+                .Where(b => b.UserId == userId)
+                .Select(b => new BuildingDto // Select into the DTO
+                {
+                    Id = b.Id,
+                    Name = b.Name,
+                    NumberOfFloors = b.NumberOfFloors
+                })
+                .ToListAsync();
+
+            return Ok(buildings);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateBuilding(BuildingCreateDto buildingDto)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
             var building = new Building
             {
                 Name = buildingDto.Name,
@@ -31,7 +50,7 @@ namespace ElevatorApi.Controllers
                 UserId = userId
             };
 
-            var elevator = new ElevatorEntity
+            var elevator = new Elevator
             {
                 CurrentFloor = 0,
                 Status = ElevatorStatus.Idle,
@@ -42,10 +61,18 @@ namespace ElevatorApi.Controllers
 
             _context.Buildings.Add(building);
             _context.Elevators.Add(elevator);
-
+            
             await _context.SaveChangesAsync();
 
-            return Ok(building);
+            // Create a DTO to return to the client
+            var buildingToReturn = new BuildingDto
+            {
+                Id = building.Id,
+                Name = building.Name,
+                NumberOfFloors = building.NumberOfFloors
+            };
+
+            return Ok(buildingToReturn);
         }
     }
 }

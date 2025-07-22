@@ -1,18 +1,15 @@
 using ElevatorApi.Entities;
 using Microsoft.EntityFrameworkCore;
-using ElevatorEntity = Elevator.Api.Entities.Elevator;
 
-namespace ElevatorApi.Data
+namespace ElevatorApi.Data // <-- Note the updated namespace
 {
     public class ElevatorDbContext : DbContext
     {
-        public ElevatorDbContext(DbContextOptions<ElevatorDbContext> options) : base(options)
-        {
-        }
+        public ElevatorDbContext(DbContextOptions<ElevatorDbContext> options) : base(options) {}
 
         public DbSet<User> Users { get; set; }
         public DbSet<Building> Buildings { get; set; }
-        public DbSet<ElevatorEntity> Elevators { get; set; }
+        public DbSet<Elevator> Elevators { get; set; }
         public DbSet<ElevatorCall> ElevatorCalls { get; set; }
         public DbSet<ElevatorCallAssignment> ElevatorCallAssignments { get; set; }
 
