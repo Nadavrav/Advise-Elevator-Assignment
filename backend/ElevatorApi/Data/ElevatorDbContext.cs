@@ -1,11 +1,12 @@
 using ElevatorApi.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace ElevatorApi.Data // <-- Note the updated namespace
+namespace ElevatorApi.Data
 {
     public class ElevatorDbContext : DbContext
     {
-        public ElevatorDbContext(DbContextOptions<ElevatorDbContext> options) : base(options) {}
+        public ElevatorDbContext(DbContextOptions<ElevatorDbContext> options)
+            : base(options) { }
 
         public DbSet<User> Users { get; set; }
         public DbSet<Building> Buildings { get; set; }
@@ -17,11 +18,13 @@ namespace ElevatorApi.Data // <-- Note the updated namespace
         {
             base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<ElevatorCallAssignment>()
+            modelBuilder
+                .Entity<ElevatorCallAssignment>()
                 .HasOne(a => a.Elevator)
                 .WithMany(e => e.ElevatorCallAssignments)
                 .HasForeignKey(a => a.ElevatorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

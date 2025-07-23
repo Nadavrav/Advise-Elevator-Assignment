@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext';
 function DashboardPage() {
   const [buildings, setBuildings] = useState([]);
   const [name, setName] = useState('');
-  const [floors, setFloors] = useState(10); // Default value
+  const [floors, setFloors] = useState(10);
+  const [numElevators, setNumElevators] = useState(1); // New state for number of elevators
   const [error, setError] = useState(null);
   const { token } = useAuth();
 
@@ -43,15 +44,20 @@ function DashboardPage() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ name: name, numberOfFloors: parseInt(floors) }),
+        // Include numberOfElevators in the request body
+        body: JSON.stringify({ 
+          name: name, 
+          numberOfFloors: parseInt(floors), 
+          numberOfElevators: parseInt(numElevators) 
+        }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to create building.');
       }
-      // Reset form and refetch buildings to update the list
       setName('');
       setFloors(10);
+      setNumElevators(1);
       fetchBuildings();
     } catch (err) {
       setError(err.message);
@@ -81,6 +87,18 @@ function DashboardPage() {
               value={floors} 
               onChange={(e) => setFloors(e.target.value)} 
               min="1" 
+              required 
+            />
+          </div>
+          {/* New input field for number of elevators */}
+          <div>
+            <label>Number of Elevators:</label>
+            <input 
+              type="number" 
+              value={numElevators} 
+              onChange={(e) => setNumElevators(e.target.value)} 
+              min="1"
+              max="10" 
               required 
             />
           </div>

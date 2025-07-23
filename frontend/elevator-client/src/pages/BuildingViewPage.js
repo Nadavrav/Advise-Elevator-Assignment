@@ -1,27 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { HubConnectionBuilder } from '@microsoft/signalr';
+import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { HubConnectionBuilder } from "@microsoft/signalr";
 
 function BuildingViewPage() {
   const { id: buildingId } = useParams();
   const { token } = useAuth();
-  
+
   const [building, setBuilding] = useState(null);
-  const [elevatorState, setElevatorState] = useState({ currentFloor: 0, status: 'Idle', doorStatus: 'Closed' });
+  const [elevators, setElevators] = useState({});
   const [error, setError] = useState(null);
   const [connection, setConnection] = useState(null);
 
-  // Effect for fetching building details (no change)
   useEffect(() => {
     const fetchBuilding = async () => {
       try {
-        const response = await fetch(`http://localhost:5009/api/buildings/${buildingId}`, {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!response.ok) throw new Error('Failed to fetch building details.');
+        const response = await fetch(
+          `http://localhost:5009/api/buildings/${buildingId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        if (!response.ok) throw new Error("Failed to fetch building details.");
         const data = await response.json();
         setBuilding(data);
+
+        const initialElevators = {};
+        for (const elevator of data.elevators) {
+          initialElevators[elevator.id] = elevator;
+        }
+        setElevators(initialElevators);
       } catch (err) {
         setError(err.message);
       }
@@ -29,7 +37,6 @@ function BuildingViewPage() {
     if (token) fetchBuilding();
   }, [buildingId, token]);
 
-  // Effect for setting up SignalR (no change)
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
       .withUrl("http://localhost:5009/elevatorHub")
@@ -38,25 +45,35 @@ function BuildingViewPage() {
     setConnection(newConnection);
   }, []);
 
-  // Effect for managing the SignalR connection (no change)
   useEffect(() => {
     if (connection) {
-      connection.start()
+      connection
+        .start()
         .then(() => {
-          console.log('SignalR Connected!');
-          connection.invoke("JoinBuildingGroup", buildingId).catch(err => console.error('Error joining group: ', err));
-          connection.on('ReceiveElevatorUpdate', (update) => {
-            console.log('Update received:', update);
-            setElevatorState({
-              currentFloor: update.currentFloor,
-              status: update.status,
-              doorStatus: update.doorStatus,
-            });
+          console.log("SignalR Connected!");
+          connection
+            .invoke("JoinBuildingGroup", buildingId)
+            .catch((err) => console.error("Error joining group: ", err));
+
+          connection.on("ReceiveElevatorUpdate", (update) => {
+            console.log("Update received for elevator " + update.id, update);
+            setElevators((prevElevators) => ({
+              ...prevElevators,
+              [update.id]: {
+                ...prevElevators[update.id],
+                currentFloor: update.currentFloor,
+                status: update.status,
+                direction: update.direction,
+                doorStatus: update.doorStatus,
+              },
+            }));
           });
         })
-        .catch(e => console.log('Connection failed: ', e));
+        .catch((e) => console.log("Connection failed: ", e));
     }
-    return () => { connection?.stop(); };
+    return () => {
+      connection?.stop();
+    };
   }, [connection, buildingId]);
 
   const handleCallElevator = async (floor) => {
@@ -64,8 +81,8 @@ function BuildingViewPage() {
       await fetch("http://localhost:5009/api/calls", {
         method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           buildingId: parseInt(buildingId),
@@ -77,17 +94,17 @@ function BuildingViewPage() {
     }
   };
 
-  const handleSelectDestination = async (destinationFloor) => {
+  const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
       await fetch("http://localhost:5009/api/calls/destination", {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           buildingId: parseInt(buildingId),
-          pickupFloor: elevatorState.currentFloor,
+          pickupFloor: pickupFloor,
           destinationFloor: destinationFloor,
         }),
       });
@@ -98,40 +115,48 @@ function BuildingViewPage() {
   };
 
   const elevatorStyle = {
-    border: '2px solid black',
-    padding: '10px',
-    margin: '5px 0',
-    backgroundColor: elevatorState.doorStatus === 'Open' ? 'lightblue' : 'lightgray',
-    transition: 'all 0.5s ease',
-    minWidth: '100px',
-    textAlign: 'center',
+    border: "2px solid black",
+    backgroundColor: "lightgray",
+    padding: "10px",
+    width: "80%",
+    minHeight: "44px",
+    boxSizing: "border-box",
+    textAlign: "center",
   };
 
   const floorStyle = {
-    border: '1px solid #ccc',
-    padding: '10px',
-    margin: '5px 0',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    border: "1px solid #ccc",
+    padding: "10px",
+    margin: "5px 0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: "66px",
+    boxSizing: "border-box",
   };
 
   if (!building) return <div>Loading building...</div>;
 
-  const floors = Array.from({ length: building.numberOfFloors }, (_, i) => building.numberOfFloors - 1 - i);
+  const floors = Array.from(
+    { length: building.numberOfFloors },
+    (_, i) => building.numberOfFloors - 1 - i
+  );
 
-  const renderElevatorContent = () => {
-    if (elevatorState.doorStatus === 'Open') {
+  // This function renders the content inside an elevator
+  const renderElevatorContent = (elevator) => {
+    if (elevator.doorStatus === "Open") {
       return (
         <div>
-          <strong>ELEVATOR</strong>
-          <div style={{ marginTop: '10px' }}>
-            {floors.map(floor => (
-              <button 
-                key={floor} 
-                onClick={() => handleSelectDestination(floor)}
-                disabled={floor === elevatorState.currentFloor}
-                style={{ margin: '2px' }}
+          <strong>E-{elevator.id}</strong>
+          <div style={{ marginTop: "5px", fontSize: "10px" }}>
+            {floors.map((floor) => (
+              <button
+                key={floor}
+                onClick={() =>
+                  handleSelectDestination(elevator.currentFloor, floor)
+                }
+                disabled={floor === elevator.currentFloor}
+                style={{ margin: "1px" }}
               >
                 {floor}
               </button>
@@ -140,26 +165,72 @@ function BuildingViewPage() {
         </div>
       );
     }
-    return <strong>ELEVATOR</strong>;
+    return <strong>E-{elevator.id}</strong>;
   };
 
   return (
     <div>
       <h1>{building.name}</h1>
-      <p>Elevator is on floor: <strong>{elevatorState.currentFloor}</strong> | Status: <strong>{elevatorState.status}</strong></p>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      
-      <div style={{ border: '2px solid gray', padding: '10px', marginTop: '20px' }}>
-        {floors.map(floorNum => (
-          <div key={floorNum} style={floorStyle}>
-            <span>Floor {floorNum}</span>
-            {elevatorState.currentFloor === floorNum ? (
-              <div style={elevatorStyle}>
-                {renderElevatorContent()}
-              </div>
-            ) : (
+      {error && <p style={{ color: "red" }}>{error}</p>}
+
+      <div
+        style={{
+          display: "flex",
+          gap: "10px",
+          border: "2px solid gray",
+          padding: "10px",
+          marginTop: "20px",
+        }}
+      >
+        {/* Floors Column */}
+        <div style={{ flexGrow: 1 }}>
+          {floors.map((floorNum) => (
+            <div key={floorNum} style={floorStyle}>
+              <span>Floor {floorNum}</span>
               <button onClick={() => handleCallElevator(floorNum)}>Call</button>
-            )}
+            </div>
+          ))}
+        </div>
+
+        {/* Elevator Shafts */}
+        {Object.values(elevators).map((elevator) => (
+          <div
+            key={elevator.id}
+            style={{
+              flexGrow: 1,
+              borderLeft: "1px solid black",
+              borderRight: "1px solid black",
+            }}
+          >
+            {floors.map((floorNum) => (
+              <div
+                key={floorNum}
+                style={{
+                  border: "1px solid transparent",
+                  padding: "10px",
+                  margin: "5px 0",
+                  minHeight: "66px",
+                  boxSizing: "border-box",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {elevator.currentFloor === floorNum && (
+                  <div
+                    style={{
+                      ...elevatorStyle,
+                      backgroundColor:
+                        elevator.doorStatus === "Open"
+                          ? "lightblue"
+                          : "lightgray",
+                    }}
+                  >
+                    {renderElevatorContent(elevator)}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         ))}
       </div>

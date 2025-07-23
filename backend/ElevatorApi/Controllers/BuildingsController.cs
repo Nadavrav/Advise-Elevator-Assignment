@@ -47,24 +47,27 @@ namespace ElevatorApi.Controllers
             {
                 Name = buildingDto.Name,
                 NumberOfFloors = buildingDto.NumberOfFloors,
+                NumberOfElevators = buildingDto.NumberOfElevators,
                 UserId = userId,
             };
 
-            var elevator = new Elevator
+            for (int i = 0; i < building.NumberOfElevators; i++)
             {
-                CurrentFloor = 0,
-                Status = ElevatorStatus.Idle,
-                Direction = Direction.None,
-                DoorStatus = DoorStatus.Closed,
-                Building = building,
-            };
+                var elevator = new Elevator
+                {
+                    CurrentFloor = 0,
+                    Status = ElevatorStatus.Idle,
+                    Direction = Direction.None,
+                    DoorStatus = DoorStatus.Closed,
+                    Building = building,
+                };
+                _context.Elevators.Add(elevator);
+            }
 
             _context.Buildings.Add(building);
-            _context.Elevators.Add(elevator);
 
             await _context.SaveChangesAsync();
 
-            // Create a DTO to return to the client
             var buildingToReturn = new BuildingDto
             {
                 Id = building.Id,
@@ -81,7 +84,8 @@ namespace ElevatorApi.Controllers
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             var building = await _context
-                .Buildings.Where(b => b.UserId == userId && b.Id == id)
+                .Buildings.Include(b => b.Elevators)
+                .Where(b => b.UserId == userId && b.Id == id)
                 .FirstOrDefaultAsync();
 
             if (building == null)
@@ -89,12 +93,21 @@ namespace ElevatorApi.Controllers
                 return NotFound();
             }
 
-            // We use the DTO to avoid circular references
             var buildingDto = new BuildingDto
             {
                 Id = building.Id,
                 Name = building.Name,
                 NumberOfFloors = building.NumberOfFloors,
+                Elevators = building
+                    .Elevators.Select(e => new ElevatorDto
+                    {
+                        Id = e.Id,
+                        CurrentFloor = e.CurrentFloor,
+                        Status = e.Status,
+                        Direction = e.Direction,
+                        DoorStatus = e.DoorStatus,
+                    })
+                    .ToList(),
             };
 
             return Ok(buildingDto);

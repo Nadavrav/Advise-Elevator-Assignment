@@ -10,5 +10,9 @@ namespace ElevatorApi.DTOs
         [Required]
         [Range(1, 100)]
         public int NumberOfFloors { get; set; }
+
+        [Required]
+        [Range(1, 10)]
+        public int NumberOfElevators { get; set; }
     }
 }
