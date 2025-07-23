@@ -6,19 +6,25 @@
 }
 
 .simulationContainer {
-    display: grid; /* Use Grid instead of Flexbox */
-    grid-template-columns: 200px repeat(auto-fit, minmax(120px, 1fr)); /* Floors column + elevator shafts */
+    display: flex;
     gap: 1rem;
     border: 2px solid #333;
     padding: 1rem;
-    background-color: #fdfdfd;
     border-radius: 8px;
 }
 
-.floor {
+.floorsColumn {
+    display: flex;
+    flex-direction: column-reverse;
+    flex-basis: 200px;
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.floorLabel {
     border: 1px solid #e9ecef;
     background-color: #f8f9fa;
-    height: 100px;
+    height: 80px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -28,67 +34,72 @@
     box-sizing: border-box;
 }
 
-.shaftCell {
+.shaftsContainer {
+    display: flex;
+    flex-grow: 1;
+    gap: 1rem;
+}
+
+.shaft {
+    flex-grow: 1;
     background-color: #e9ecef;
     border-radius: 4px;
-    height: 100px; /* Must match floor height */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
+    position: relative; /* This is the container for the elevator */
 }
 
 .elevator {
     width: 90%;
-    height: 90%;
+    height: 80px; /* Match floor height */
     background-color: #6c757d;
     border: 2px solid #343a40;
     border-radius: 4px;
+    color: white;
+    font-weight: bold;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    color: white;
-    font-weight: bold;
-    transition: background-color 0.3s;
+    
+    position: absolute;
+    bottom: 0;
+    left: 5%;
+    
+    /* The magic for smooth movement */
+    transition: transform 0.5s ease-in-out;
 }
 
 .elevatorOpen {
     background-color: #17a2b8;
 }
 
-.destinationPad {
-    margin-top: 5px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2px;
-    justify-content: center;
+/* Other styles (destinationPad, buttons, etc.) remain the same */
+.destinationPad { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
+.destinationButton { width: 20px; height: 20px; font-size: 10px; padding: 0; cursor: pointer; }
+.destinationButton:disabled { background-color: #adb5bd; cursor: not-allowed; }
+.callButton { padding: 0.5rem 1rem; border: 1px solid #007bff; background-color: white; color: #007bff; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+.callButton:hover { background-color: #007bff; color: white; }
+
+.tooltip {
+  visibility: hidden;
+  opacity: 0;
+  width: 200px;
+  background-color: #343a40;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 105%; 
+  left: 50%;
+  margin-left: -100px; 
+  transition: opacity 0.3s;
+  font-size: 0.9rem;
+  font-weight: normal;
+  white-space: nowrap;
 }
 
-.destinationButton {
-    width: 20px;
-    height: 20px;
-    font-size: 10px;
-    padding: 0;
-    cursor: pointer;
-}
-
-.destinationButton:disabled {
-    background-color: #adb5bd;
-    cursor: not-allowed;
-}
-
-.callButton {
-    padding: 0.5rem 1rem;
-    border: 1px solid #007bff;
-    background-color: white;
-    color: #007bff;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.callButton:hover {
-    background-color: #007bff;
-    color: white;
+.elevator:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
 }
