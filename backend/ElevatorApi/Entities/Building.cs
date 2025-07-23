@@ -8,8 +8,7 @@ namespace ElevatorApi.Entities
 
         public int UserId { get; set; }
         public User User { get; set; } = null!;
-        
-        public Elevator Elevator { get; set; } = null!;
 
+        public Elevator Elevator { get; set; } = null!;
     }
 }
