@@ -18,7 +18,7 @@ function BuildingViewPage() {
     const fetchBuilding = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5009/api/buildings/${buildingId}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/buildings/${buildingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!response.ok) throw new Error("Failed to fetch building details.");
@@ -39,7 +39,7 @@ function BuildingViewPage() {
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5009/elevatorHub")
+      .withUrl(`${process.env.REACT_APP_API_BASE_URL}/elevatorHub`)
       .withAutomaticReconnect()
       .build();
     setConnection(newConnection);
@@ -71,7 +71,7 @@ function BuildingViewPage() {
 
   const handleCallElevator = async (floor) => {
     try {
-      await fetch("http://localhost:5009/api/calls", {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/calls`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +89,7 @@ function BuildingViewPage() {
 
   const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
-      await fetch("http://localhost:5009/api/calls/destination", {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/calls/destination`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

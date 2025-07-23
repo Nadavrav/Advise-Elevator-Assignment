@@ -17,7 +17,7 @@ function DashboardPage() {
     setError(null);
     showLoading();
     try {
-      const response = await fetch("http://localhost:5009/api/buildings", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/buildings`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -44,7 +44,7 @@ function DashboardPage() {
     setError(null);
     showLoading();
     try {
-      const response = await fetch("http://localhost:5009/api/buildings", {
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/buildings`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

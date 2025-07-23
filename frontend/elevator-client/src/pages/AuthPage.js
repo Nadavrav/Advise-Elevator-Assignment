@@ -25,8 +25,8 @@ function AuthPage() {
     showLoading();
 
     const url = isLoginMode
-      ? `http://localhost:5009/api/users/login`
-      : `http://localhost:5009/api/users/register`;
+      ? `${process.env.REACT_APP_API_BASE_URL}/api/users/login`
+      : `${process.env.REACT_APP_API_BASE_URL}/api/users/register`;
 
     try {
       const response = await fetch(url, {
