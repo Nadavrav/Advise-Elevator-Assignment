@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useLoading } from "../context/LoadingContext"; // Import useLoading
 import { HubConnectionBuilder } from "@microsoft/signalr";
+import styles from "./BuildingViewPage.module.css";
 
 function BuildingViewPage() {
   const { id: buildingId } = useParams();
   const { token } = useAuth();
+  const { showLoading, hideLoading } = useLoading(); // Get loading functions
 
   const [building, setBuilding] = useState(null);
   const [elevators, setElevators] = useState({});
@@ -14,6 +17,8 @@ function BuildingViewPage() {
 
   useEffect(() => {
     const fetchBuilding = async () => {
+      setError(null);
+      showLoading();
       try {
         const response = await fetch(
           `http://localhost:5009/api/buildings/${buildingId}`,
@@ -32,10 +37,12 @@ function BuildingViewPage() {
         setElevators(initialElevators);
       } catch (err) {
         setError(err.message);
+      } finally {
+        hideLoading();
       }
     };
     if (token) fetchBuilding();
-  }, [buildingId, token]);
+  }, [buildingId, token, showLoading, hideLoading]);
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
@@ -56,7 +63,6 @@ function BuildingViewPage() {
             .catch((err) => console.error("Error joining group: ", err));
 
           connection.on("ReceiveElevatorUpdate", (update) => {
-            console.log("Update received for elevator " + update.id, update);
             setElevators((prevElevators) => ({
               ...prevElevators,
               [update.id]: {
@@ -76,9 +82,23 @@ function BuildingViewPage() {
     };
   }, [connection, buildingId]);
 
+  const handleApiCall = async (url, options) => {
+    showLoading();
+    try {
+      const response = await fetch(url, options);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || "API call failed");
+      }
+      return response;
+    } finally {
+      hideLoading();
+    }
+  };
+
   const handleCallElevator = async (floor) => {
     try {
-      await fetch("http://localhost:5009/api/calls", {
+      await handleApiCall("http://localhost:5009/api/calls", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -90,13 +110,13 @@ function BuildingViewPage() {
         }),
       });
     } catch (err) {
-      alert("Failed to call elevator.");
+      alert(`Failed to call elevator: ${err.message}`);
     }
   };
 
   const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
-      await fetch("http://localhost:5009/api/calls/destination", {
+      await handleApiCall("http://localhost:5009/api/calls/destination", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -108,47 +128,24 @@ function BuildingViewPage() {
           destinationFloor: destinationFloor,
         }),
       });
-      alert(`Destination ${destinationFloor} selected!`);
     } catch (err) {
-      alert("Failed to select destination.");
+      alert(`Failed to select destination: ${err.message}`);
     }
   };
 
-  const elevatorStyle = {
-    border: "2px solid black",
-    backgroundColor: "lightgray",
-    padding: "10px",
-    width: "80%",
-    minHeight: "44px",
-    boxSizing: "border-box",
-    textAlign: "center",
-  };
-
-  const floorStyle = {
-    border: "1px solid #ccc",
-    padding: "10px",
-    margin: "5px 0",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    minHeight: "66px",
-    boxSizing: "border-box",
-  };
-
-  if (!building) return <div>Loading building...</div>;
+  if (!building) return null; // Let the loading modal handle the initial loading state
 
   const floors = Array.from(
     { length: building.numberOfFloors },
     (_, i) => building.numberOfFloors - 1 - i
   );
 
-  // This function renders the content inside an elevator
   const renderElevatorContent = (elevator) => {
     if (elevator.doorStatus === "Open") {
       return (
-        <div>
-          <strong>E-{elevator.id}</strong>
-          <div style={{ marginTop: "5px", fontSize: "10px" }}>
+        <>
+          <span>E-{elevator.id}</span>
+          <div className={styles.destinationPad}>
             {floors.map((floor) => (
               <button
                 key={floor}
@@ -156,75 +153,45 @@ function BuildingViewPage() {
                   handleSelectDestination(elevator.currentFloor, floor)
                 }
                 disabled={floor === elevator.currentFloor}
-                style={{ margin: "1px" }}
+                className={styles.destinationButton}
               >
                 {floor}
               </button>
             ))}
           </div>
-        </div>
+        </>
       );
     }
-    return <strong>E-{elevator.id}</strong>;
+    return <span>E-{elevator.id}</span>;
   };
 
   return (
-    <div>
+    <div className={styles.pageContainer}>
       <h1>{building.name}</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <div
-        style={{
-          display: "flex",
-          gap: "10px",
-          border: "2px solid gray",
-          padding: "10px",
-          marginTop: "20px",
-        }}
-      >
-        {/* Floors Column */}
-        <div style={{ flexGrow: 1 }}>
+      <div className={styles.simulationContainer}>
+        <div>
           {floors.map((floorNum) => (
-            <div key={floorNum} style={floorStyle}>
+            <div key={floorNum} className={styles.floor}>
               <span>Floor {floorNum}</span>
-              <button onClick={() => handleCallElevator(floorNum)}>Call</button>
+              <button
+                onClick={() => handleCallElevator(floorNum)}
+                className={styles.callButton}
+              >
+                Call
+              </button>
             </div>
           ))}
         </div>
 
-        {/* Elevator Shafts */}
         {Object.values(elevators).map((elevator) => (
-          <div
-            key={elevator.id}
-            style={{
-              flexGrow: 1,
-              borderLeft: "1px solid black",
-              borderRight: "1px solid black",
-            }}
-          >
+          <div key={elevator.id} className={styles.shaft}>
             {floors.map((floorNum) => (
-              <div
-                key={floorNum}
-                style={{
-                  border: "1px solid transparent",
-                  padding: "10px",
-                  margin: "5px 0",
-                  minHeight: "66px",
-                  boxSizing: "border-box",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <div key={floorNum} className={styles.shaftCell}>
                 {elevator.currentFloor === floorNum && (
                   <div
-                    style={{
-                      ...elevatorStyle,
-                      backgroundColor:
-                        elevator.doorStatus === "Open"
-                          ? "lightblue"
-                          : "lightgray",
-                    }}
+                    className={`${styles.elevator} ${
+                      elevator.doorStatus === "Open" ? styles.elevatorOpen : ""
+                    }`}
                   >
                     {renderElevatorContent(elevator)}
                   </div>

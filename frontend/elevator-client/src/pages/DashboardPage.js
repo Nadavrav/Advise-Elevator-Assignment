@@ -1,32 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useLoading } from "../context/LoadingContext"; // Import useLoading
+import styles from "./DashboardPage.module.css";
 
 function DashboardPage() {
   const [buildings, setBuildings] = useState([]);
-  const [name, setName] = useState('');
+  const [name, setName] = useState("");
   const [floors, setFloors] = useState(10);
-  const [numElevators, setNumElevators] = useState(1); // New state for number of elevators
+  const [numElevators, setNumElevators] = useState(1);
   const [error, setError] = useState(null);
   const { token } = useAuth();
+  const { showLoading, hideLoading } = useLoading(); // Get loading functions
 
   const fetchBuildings = useCallback(async () => {
+    setError(null);
+    showLoading();
     try {
-      const response = await fetch('http://localhost:5009/api/buildings', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+      const response = await fetch("http://localhost:5009/api/buildings", {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch buildings.');
+        throw new Error("Failed to fetch buildings.");
       }
       const data = await response.json();
       setBuildings(data);
     } catch (err) {
       setError(err.message);
+    } finally {
+      hideLoading();
     }
-  }, [token]);
+  }, [token, showLoading, hideLoading]);
 
   useEffect(() => {
     if (token) {
@@ -37,92 +42,101 @@ function DashboardPage() {
   const handleCreateBuilding = async (event) => {
     event.preventDefault();
     setError(null);
+    showLoading();
     try {
-      const response = await fetch('http://localhost:5009/api/buildings', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5009/api/buildings", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        // Include numberOfElevators in the request body
-        body: JSON.stringify({ 
-          name: name, 
-          numberOfFloors: parseInt(floors), 
-          numberOfElevators: parseInt(numElevators) 
+        body: JSON.stringify({
+          name: name,
+          numberOfFloors: parseInt(floors),
+          numberOfElevators: parseInt(numElevators),
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create building.');
+        throw new Error("Failed to create building.");
       }
-      setName('');
+      setName("");
       setFloors(10);
       setNumElevators(1);
-      fetchBuildings();
+      fetchBuildings(); // This will trigger its own loading indicator
     } catch (err) {
       setError(err.message);
+      hideLoading(); // Hide loading on error
     }
+    // hideLoading() is called inside fetchBuildings on success
   };
 
   return (
-    <div>
+    <div className={styles.dashboardContainer}>
       <h1>My Buildings Dashboard</h1>
-      
-      <div style={{ marginBottom: '2rem' }}>
+
+      <div className={styles.section}>
         <h2>Add New Building</h2>
-        <form onSubmit={handleCreateBuilding}>
-          <div>
+        <form onSubmit={handleCreateBuilding} className={styles.form}>
+          <div className={styles.inputGroup}>
             <label>Building Name:</label>
-            <input 
-              type="text" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              required 
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className={styles.input}
             />
           </div>
-          <div>
+          <div className={styles.inputGroup}>
             <label>Number of Floors:</label>
-            <input 
-              type="number" 
-              value={floors} 
-              onChange={(e) => setFloors(e.target.value)} 
-              min="1" 
-              required 
-            />
-          </div>
-          {/* New input field for number of elevators */}
-          <div>
-            <label>Number of Elevators:</label>
-            <input 
-              type="number" 
-              value={numElevators} 
-              onChange={(e) => setNumElevators(e.target.value)} 
+            <input
+              type="number"
+              value={floors}
+              onChange={(e) => setFloors(e.target.value)}
               min="1"
-              max="10" 
-              required 
+              required
+              className={styles.input}
             />
           </div>
-          <button type="submit">Create Building</button>
+          <div className={styles.inputGroup}>
+            <label>Number of Elevators:</label>
+            <input
+              type="number"
+              value={numElevators}
+              onChange={(e) => setNumElevators(e.target.value)}
+              min="1"
+              max="10"
+              required
+              className={styles.input}
+            />
+          </div>
+          <button type="submit" className={styles.button}>
+            Create Building
+          </button>
         </form>
+        {error && <p className={styles.error}>{error}</p>}
       </div>
 
-      <hr />
-
-      <h2>Existing Buildings</h2>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      {buildings.length > 0 ? (
-        <ul>
-          {buildings.map((building) => (
-            <li key={building.id}>
-              <Link to={`/building/${building.id}`}>
-                {building.name} ({building.numberOfFloors} floors)
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p>No buildings found. Create one above!</p>
-      )}
+      <div className={styles.section}>
+        <h2>Existing Buildings</h2>
+        {buildings.length > 0 ? (
+          <ul className={styles.buildingList}>
+            {buildings.map((building) => (
+              <li key={building.id} className={styles.buildingItem}>
+                <Link
+                  to={`/building/${building.id}`}
+                  className={styles.buildingLink}
+                >
+                  {building.name} ({building.numberOfFloors} floors)
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>No buildings found. Create one above!</p>
+        )}
+      </div>
     </div>
   );
 }

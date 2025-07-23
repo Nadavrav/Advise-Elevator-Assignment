@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // Import the useAuth hook
+import { useAuth } from '../context/AuthContext';
+import { useLoading } from '../context/LoadingContext';
+import styles from './AuthPage.module.css';
 
 function AuthPage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
@@ -9,7 +11,8 @@ function AuthPage() {
   const [error, setError] = useState(null);
   
   const navigate = useNavigate();
-  const { login } = useAuth(); // Get the login function from our context
+  const { login } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
 
   const switchModeHandler = () => {
     setIsLoginMode((prevMode) => !prevMode);
@@ -19,68 +22,73 @@ function AuthPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
+    showLoading(); // Show the modal
 
     const url = isLoginMode
-      ? 'http://localhost:5009/api/users/login'
-      : 'http://localhost:5009/api/users/register';
+      ? `http://localhost:5009/api/users/login`
+      : `http://localhost:5009/api/users/register`;
 
     try {
       const response = await fetch(url, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || data || 'An error occurred.');
-      }
+      if (!response.ok) throw new Error(data.message || data || 'An error occurred.');
 
       if (isLoginMode) {
-        // Use the context to save the token
         login(data.token);
         navigate('/dashboard');
       } else {
         alert('Registration successful! Please log in.');
         switchModeHandler();
       }
-
     } catch (err) {
       setError(err.message);
+    } finally {
+      hideLoading(); // Always hide the modal, even if there's an error
     }
   };
 
   return (
-    <div>
-      <h1>{isLoginMode ? 'Login' : 'Register'}</h1>
-      <form onSubmit={handleSubmit}>
-        <div>
+    <div className={styles.authContainer}>
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <h1>{isLoginMode ? 'Login' : 'Register'}</h1>
+        
+        <div className={styles.inputGroup}>
           <label>Email:</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            className={styles.input}
           />
         </div>
-        <div>
+        
+        <div className={styles.inputGroup}>
           <label>Password:</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
+            className={styles.input}
           />
         </div>
-        <button type="submit">{isLoginMode ? 'Login' : 'Create Account'}</button>
+        
+        <button type="submit" className={styles.button}>
+          {isLoginMode ? 'Login' : 'Create Account'}
+        </button>
+        
+        {error && <p className={styles.error}>{error}</p>}
+        
+        <button type="button" onClick={switchModeHandler} className={styles.switchButton}>
+          Switch to {isLoginMode ? 'Register' : 'Login'}
+        </button>
       </form>
-      <button onClick={switchModeHandler}>
-        Switch to {isLoginMode ? 'Register' : 'Login'}
-      </button>
-      {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
   );
 }

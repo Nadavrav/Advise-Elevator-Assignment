@@ -1,0 +1,99 @@
+.dashboardContainer {
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2rem;
+    font-family: sans-serif;
+    color: #333;
+}
+
+.section {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 1rem;
+}
+
+.form {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+}
+
+.inputGroup {
+    display: flex;
+    flex-direction: column;
+}
+
+.inputGroup label {
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #555;
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.button {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    background-color: #28a745;
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    height: 45px; /* Aligns with input height */
+}
+
+.button:hover {
+    background-color: #218838;
+}
+
+.buildingList {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.buildingItem {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+}
+
+.buildingItem:last-child {
+    border-bottom: none;
+}
+
+.buildingLink {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.buildingLink:hover {
+    text-decoration: underline;
+}
+
+.error {
+    color: #dc3545;
+    margin-top: 1rem;
+    font-weight: bold;
+}
