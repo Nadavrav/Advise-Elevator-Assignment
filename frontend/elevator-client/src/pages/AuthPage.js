@@ -22,7 +22,7 @@ function AuthPage() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
-    showLoading(); // Show the modal
+    showLoading();
 
     const url = isLoginMode
       ? `http://localhost:5009/api/users/login`
@@ -48,7 +48,7 @@ function AuthPage() {
     } catch (err) {
       setError(err.message);
     } finally {
-      hideLoading(); // Always hide the modal, even if there's an error
+      hideLoading(); 
     }
   };
 

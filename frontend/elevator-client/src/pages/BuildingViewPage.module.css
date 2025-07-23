@@ -44,12 +44,12 @@
     flex-grow: 1;
     background-color: #e9ecef;
     border-radius: 4px;
-    position: relative; /* This is the container for the elevator */
+    position: relative;
 }
 
 .elevator {
     width: 90%;
-    height: 80px; /* Match floor height */
+    height: 80px; 
     background-color: #6c757d;
     border: 2px solid #343a40;
     border-radius: 4px;
@@ -64,7 +64,7 @@
     bottom: 0;
     left: 5%;
     
-    /* The magic for smooth movement */
+    
     transition: transform 0.5s ease-in-out;
 }
 
@@ -72,7 +72,6 @@
     background-color: #17a2b8;
 }
 
-/* Other styles (destinationPad, buttons, etc.) remain the same */
 .destinationPad { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
 .destinationButton { width: 20px; height: 20px; font-size: 10px; padding: 0; cursor: pointer; }
 .destinationButton:disabled { background-color: #adb5bd; cursor: not-allowed; }

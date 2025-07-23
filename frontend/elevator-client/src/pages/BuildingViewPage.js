@@ -13,7 +13,7 @@ function BuildingViewPage() {
   const [error, setError] = useState(null);
   const [connection, setConnection] = useState(null);
 
-  // All of your useEffect and handler functions are correct and do not need changes.
+ 
   useEffect(() => {
     const fetchBuilding = async () => {
       try {
@@ -169,7 +169,7 @@ function BuildingViewPage() {
                 style={{
                   transform: `translateY(-${
                     elevator.currentFloor * (80 + 10)
-                  }px)`, // 80px height + 10px gap
+                  }px)`, 
                 }}
               >
                 {renderElevatorContent(elevator)}

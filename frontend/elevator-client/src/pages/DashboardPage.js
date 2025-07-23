@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { useLoading } from "../context/LoadingContext"; // Import useLoading
+import { useLoading } from "../context/LoadingContext"; 
 import styles from "./DashboardPage.module.css";
 
 function DashboardPage() {
@@ -11,7 +11,7 @@ function DashboardPage() {
   const [numElevators, setNumElevators] = useState(1);
   const [error, setError] = useState(null);
   const { token } = useAuth();
-  const { showLoading, hideLoading } = useLoading(); // Get loading functions
+  const { showLoading, hideLoading } = useLoading(); 
 
   const fetchBuildings = useCallback(async () => {
     setError(null);
@@ -63,12 +63,12 @@ function DashboardPage() {
       setName("");
       setFloors(10);
       setNumElevators(1);
-      fetchBuildings(); // This will trigger its own loading indicator
+      fetchBuildings(); 
     } catch (err) {
       setError(err.message);
-      hideLoading(); // Hide loading on error
+      hideLoading(); 
     }
-    // hideLoading() is called inside fetchBuildings on success
+   
   };
 
   return (

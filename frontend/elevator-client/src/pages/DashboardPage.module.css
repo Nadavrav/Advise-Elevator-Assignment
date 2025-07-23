@@ -59,7 +59,7 @@
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.2s;
-    height: 45px; /* Aligns with input height */
+    height: 45px;
 }
 
 .button:hover {
