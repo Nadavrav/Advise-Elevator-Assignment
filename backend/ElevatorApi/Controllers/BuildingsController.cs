@@ -1,10 +1,10 @@
+using System.Security.Claims;
 using ElevatorApi.Data;
 using ElevatorApi.DTOs;
 using ElevatorApi.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace ElevatorApi.Controllers
 {
@@ -25,13 +25,13 @@ namespace ElevatorApi.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var buildings = await _context.Buildings
-                .Where(b => b.UserId == userId)
+            var buildings = await _context
+                .Buildings.Where(b => b.UserId == userId)
                 .Select(b => new BuildingDto // Select into the DTO
                 {
                     Id = b.Id,
                     Name = b.Name,
-                    NumberOfFloors = b.NumberOfFloors
+                    NumberOfFloors = b.NumberOfFloors,
                 })
                 .ToListAsync();
 
@@ -47,7 +47,7 @@ namespace ElevatorApi.Controllers
             {
                 Name = buildingDto.Name,
                 NumberOfFloors = buildingDto.NumberOfFloors,
-                UserId = userId
+                UserId = userId,
             };
 
             var elevator = new Elevator
@@ -56,12 +56,12 @@ namespace ElevatorApi.Controllers
                 Status = ElevatorStatus.Idle,
                 Direction = Direction.None,
                 DoorStatus = DoorStatus.Closed,
-                Building = building
+                Building = building,
             };
 
             _context.Buildings.Add(building);
             _context.Elevators.Add(elevator);
-            
+
             await _context.SaveChangesAsync();
 
             // Create a DTO to return to the client
@@ -69,10 +69,35 @@ namespace ElevatorApi.Controllers
             {
                 Id = building.Id,
                 Name = building.Name,
-                NumberOfFloors = building.NumberOfFloors
+                NumberOfFloors = building.NumberOfFloors,
             };
 
             return Ok(buildingToReturn);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetBuilding(int id)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var building = await _context
+                .Buildings.Where(b => b.UserId == userId && b.Id == id)
+                .FirstOrDefaultAsync();
+
+            if (building == null)
+            {
+                return NotFound();
+            }
+
+            // We use the DTO to avoid circular references
+            var buildingDto = new BuildingDto
+            {
+                Id = building.Id,
+                Name = building.Name,
+                NumberOfFloors = building.NumberOfFloors,
+            };
+
+            return Ok(buildingDto);
         }
     }
 }
