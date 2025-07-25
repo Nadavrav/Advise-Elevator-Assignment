@@ -60,31 +60,46 @@ namespace ElevatorApi.Services
                                 .ToListAsync(stoppingToken);
 
                             // --- DISPATCHER LOGIC ---
+                            // This loop assigns unhandled calls to the best elevators.
                             foreach (var call in pendingCalls)
                             {
-                                var idleAndClosest = building
-                                    .Elevators.Where(e => e.Status == ElevatorStatus.Idle)
+                                // First, check for elevators moving towards the call on the way
+                                var onTheWayElevator = building.Elevators
+                                    .Where(e =>
+                                        (e.Status == ElevatorStatus.MovingUp && e.Direction == Direction.Up && call.RequestedFloor > e.CurrentFloor) ||
+                                        (e.Status == ElevatorStatus.MovingDown && e.Direction == Direction.Down && call.RequestedFloor < e.CurrentFloor)
+                                    )
                                     .OrderBy(e => Math.Abs(e.CurrentFloor - call.RequestedFloor))
                                     .FirstOrDefault();
 
-                                if (idleAndClosest != null)
+                                Elevator bestElevator = onTheWayElevator;
+
+                                if (bestElevator == null)
                                 {
-                                    var destinations = _elevatorDestinations.GetOrAdd(
-                                        idleAndClosest.Id,
-                                        new List<int>()
-                                    );
+                                    // If no elevator is on the way, find the closest IDLE elevator
+                                    bestElevator = building.Elevators
+                                        .Where(e => e.Status == ElevatorStatus.Idle)
+                                        .OrderBy(e => Math.Abs(e.CurrentFloor - call.RequestedFloor))
+                                        .FirstOrDefault();
+                                }
+
+                                if (bestElevator != null)
+                                {
+                                    var destinations = _elevatorDestinations.GetOrAdd(bestElevator.Id, new List<int>());
                                     if (!destinations.Contains(call.RequestedFloor))
+                                    {
                                         destinations.Add(call.RequestedFloor);
-                                    if (
-                                        call.DestinationFloor.HasValue
-                                        && !destinations.Contains(call.DestinationFloor.Value)
-                                    )
+                                    }
+                                    if (call.DestinationFloor.HasValue && !destinations.Contains(call.DestinationFloor.Value))
+                                    {
                                         destinations.Add(call.DestinationFloor.Value);
+                                    }
                                     call.IsHandled = true;
                                 }
                             }
 
                             // --- STATE MACHINE LOGIC ---
+                            // This loop updates the state of each elevator based on its current mission.
                             foreach (var elevator in building.Elevators)
                             {
                                 _elevatorDestinations.TryAdd(elevator.Id, new List<int>());
@@ -96,9 +111,7 @@ namespace ElevatorApi.Services
                                     case ElevatorStatus.Idle:
                                         if (destinations.Any())
                                         {
-                                            int nextStop = destinations
-                                                .OrderBy(d => Math.Abs(elevator.CurrentFloor - d))
-                                                .First();
+                                            int nextStop = destinations.OrderBy(d => Math.Abs(elevator.CurrentFloor - d)).First();
                                             if (elevator.CurrentFloor < nextStop)
                                             {
                                                 elevator.Status = ElevatorStatus.MovingUp;
@@ -115,44 +128,17 @@ namespace ElevatorApi.Services
                                             }
                                         }
                                         break;
-
+                                    
                                     case ElevatorStatus.MovingUp:
-                                    case ElevatorStatus.MovingDown:
-                                        var onTheWayCalls = await dbContext
-                                            .ElevatorCalls.Where(c =>
-                                                c.BuildingId == elevator.BuildingId && !c.IsHandled
-                                            )
-                                            .ToListAsync(stoppingToken);
-
-                                        foreach (var call in onTheWayCalls)
+                                        elevator.CurrentFloor++;
+                                        if (destinations.Contains(elevator.CurrentFloor))
                                         {
-                                            bool isMovingUp =
-                                                elevator.Status == ElevatorStatus.MovingUp;
-                                            if (
-                                                isMovingUp
-                                                && call.RequestedFloor > elevator.CurrentFloor
-                                            )
-                                            {
-                                                if (!destinations.Contains(call.RequestedFloor))
-                                                    destinations.Add(call.RequestedFloor);
-                                                call.IsHandled = true;
-                                            }
-                                            else if (
-                                                !isMovingUp
-                                                && call.RequestedFloor < elevator.CurrentFloor
-                                            )
-                                            {
-                                                if (!destinations.Contains(call.RequestedFloor))
-                                                    destinations.Add(call.RequestedFloor);
-                                                call.IsHandled = true;
-                                            }
+                                            elevator.Status = ElevatorStatus.OpeningDoors;
                                         }
+                                        break;
 
-                                        if (elevator.Status == ElevatorStatus.MovingUp)
-                                            elevator.CurrentFloor++;
-                                        if (elevator.Status == ElevatorStatus.MovingDown)
-                                            elevator.CurrentFloor--;
-
+                                    case ElevatorStatus.MovingDown:
+                                        elevator.CurrentFloor--;
                                         if (destinations.Contains(elevator.CurrentFloor))
                                         {
                                             elevator.Status = ElevatorStatus.OpeningDoors;
@@ -174,35 +160,19 @@ namespace ElevatorApi.Services
                                         else
                                         {
                                             elevator.DoorStatus = DoorStatus.Closed;
-
-                                            var updatedCall = await dbContext
-                                                .ElevatorCalls.Where(c =>
-                                                    c.BuildingId == elevator.BuildingId
-                                                    && c.RequestedFloor == elevator.CurrentFloor
-                                                    && c.DestinationFloor.HasValue
-                                                )
+                                            var updatedCall = await dbContext.ElevatorCalls
+                                                .Where(c => c.BuildingId == elevator.BuildingId && c.RequestedFloor == elevator.CurrentFloor && c.DestinationFloor.HasValue)
                                                 .OrderByDescending(c => c.CallTime)
                                                 .FirstOrDefaultAsync(stoppingToken);
 
-                                            if (
-                                                updatedCall != null
-                                                && !destinations.Contains(
-                                                    updatedCall.DestinationFloor.Value
-                                                )
-                                            )
+                                            if (updatedCall != null && !destinations.Contains(updatedCall.DestinationFloor.Value))
                                             {
-                                                destinations.Add(
-                                                    updatedCall.DestinationFloor.Value
-                                                );
+                                                destinations.Add(updatedCall.DestinationFloor.Value);
                                             }
 
                                             if (destinations.Any())
                                             {
-                                                int nextStop = destinations
-                                                    .OrderBy(d =>
-                                                        Math.Abs(elevator.CurrentFloor - d)
-                                                    )
-                                                    .First();
+                                                int nextStop = destinations.OrderBy(d => Math.Abs(elevator.CurrentFloor - d)).First();
                                                 if (elevator.CurrentFloor < nextStop)
                                                 {
                                                     elevator.Status = ElevatorStatus.MovingUp;
