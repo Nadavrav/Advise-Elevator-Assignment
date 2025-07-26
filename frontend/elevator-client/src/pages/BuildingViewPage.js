@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import styles from "./BuildingViewPage.module.css";
+
+// Corrected import path
 import elevatorImage from "../assets/elevator-door.png";
 import arrowUpImage from "../assets/arrow-up.png";
 import arrowDownImage from "../assets/arrow-down.png";
 
 function BuildingViewPage() {
+  // ... (All logic inside the component remains the same)
   const { id: buildingId } = useParams();
   const { token } = useAuth();
   const [building, setBuilding] = useState(null);
   const [elevators, setElevators] = useState({});
   const [error, setError] = useState(null);
   const [connection, setConnection] = useState(null);
-
   useEffect(() => {
     const fetchBuilding = async () => {
       try {
@@ -36,7 +38,6 @@ function BuildingViewPage() {
     };
     if (token) fetchBuilding();
   }, [buildingId, token]);
-
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
       .withUrl("http://localhost:5009/elevatorHub")
@@ -44,7 +45,6 @@ function BuildingViewPage() {
       .build();
     setConnection(newConnection);
   }, []);
-
   useEffect(() => {
     if (connection) {
       connection
@@ -67,7 +67,6 @@ function BuildingViewPage() {
       connection?.stop();
     };
   }, [connection, buildingId]);
-
   const handleCallElevator = async (floor) => {
     try {
       await fetch("http://localhost:5009/api/calls", {
@@ -85,7 +84,6 @@ function BuildingViewPage() {
       alert("Failed to call elevator.");
     }
   };
-
   const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
       await fetch("http://localhost:5009/api/calls/destination", {
@@ -104,15 +102,12 @@ function BuildingViewPage() {
       alert("Failed to select destination.");
     }
   };
-
   if (!building) return <div>Loading building...</div>;
-
   const floors = Array.from(
     { length: building.numberOfFloors },
     (_, i) => building.numberOfFloors - 1 - i
   );
   const elevatorArray = Object.values(elevators);
-
   const renderElevatorContent = (elevator) => {
     if (elevator.doorStatus === "Open") {
       return (
@@ -139,6 +134,10 @@ function BuildingViewPage() {
 
   return (
     <div className={styles.pageContainer}>
+      {/* Corrected Link component for the animated button */}
+      <Link to="/dashboard" className={styles.animatedBackButton}>
+        <span>&larr; Back to Dashboard</span>
+      </Link>
       <h1>{building.name}</h1>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
@@ -156,7 +155,6 @@ function BuildingViewPage() {
             </div>
           ))}
         </div>
-
         <div className={styles.shaftsContainer}>
           {elevatorArray.map((elevator) => (
             <div key={elevator.id} className={styles.shaft}>
@@ -168,7 +166,7 @@ function BuildingViewPage() {
                   top: `${
                     (building.numberOfFloors - 1 - elevator.currentFloor) * 90
                   }px`,
-                }} // 80px height + 10px gap
+                }}
               >
                 <div className={styles.indicatorPanel}>
                   <img

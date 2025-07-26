@@ -5,6 +5,71 @@
     font-family: sans-serif;
 }
 
+/* --- Animated Back Button Styles --- */
+.animatedBackButton,
+.animatedBackButton *,
+.animatedBackButton :after,
+.animatedBackButton :before,
+.animatedBackButton:after,
+.animatedBackButton:before {
+  border: none;
+  box-sizing: border-box;
+}
+.animatedBackButton {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: button;
+  background-color: #000;
+  background-image: none;
+  color: #fff;
+  cursor: pointer;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  font-size: 100%;
+  font-weight: 900;
+  line-height: 1.5;
+  margin: 0;
+  margin-bottom: 1.5rem;
+  -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
+  padding: 0;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-block;
+}
+.animatedBackButton:disabled { cursor: default; }
+.animatedBackButton:-moz-focusring { outline: auto; }
+.animatedBackButton svg { display: block; vertical-align: middle; }
+.animatedBackButton [hidden] { display: none; }
+.animatedBackButton {
+  border-radius: 99rem;
+  border-width: 2px;
+  overflow: hidden;
+  padding: 0.8rem 3rem;
+  position: relative;
+}
+.animatedBackButton span { mix-blend-mode: difference; }
+.animatedBackButton:before {
+  -webkit-animation: bg-scroll 3s linear infinite;
+  animation: bg-scroll 3s linear infinite;
+  -webkit-animation-play-state: paused;
+  animation-play-state: paused;
+  background: repeating-linear-gradient(45deg, hsla(0, 0%, 100%, 0.2), hsla(0, 0%, 100%, 0.2) 0.7%, transparent 0, transparent 4%);
+  content: "";
+  display: block;
+  height: 300%;
+  left: -100%;
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  transition: opacity 0.3s, background-color 0.2s;
+  width: 300%;
+}
+.animatedBackButton:hover:before {
+  -webkit-animation-play-state: running;
+  animation-play-state: running;
+  opacity: 1;
+}
+.animatedBackButton:active:before { background-color: #fff; }
+
+/* --- Main Styles --- */
 .simulationContainer {
     display: flex;
     gap: 1rem;
@@ -12,7 +77,6 @@
     padding: 1rem;
     border-radius: 8px;
 }
-
 .floorsColumn {
     display: flex;
     flex-direction: column;
@@ -20,7 +84,6 @@
     flex-shrink: 0;
     gap: 10px;
 }
-
 .floorLabel {
     border: 1px solid #e9ecef;
     background-color: #f8f9fa;
@@ -33,20 +96,17 @@
     font-weight: bold;
     box-sizing: border-box;
 }
-
 .shaftsContainer {
     display: flex;
     flex-grow: 1;
     gap: 1rem;
 }
-
 .shaft {
     flex-grow: 1;
     background-color: #e9ecef;
     border-radius: 4px;
     position: relative;
 }
-
 .elevator {
     width: 90%;
     height: 80px;
@@ -61,7 +121,6 @@
     left: 5%;
     transition: top 0.5s ease-in-out;
 }
-
 .elevatorImage {
     width: 80%;
     height: 80%;
@@ -71,34 +130,26 @@
     border-radius: 4px;
 }
 
-.elevatorOpen .elevatorImage {
-    box-shadow: 0 0 15px 5px #17a2b8;
-}
-
 .indicatorPanel {
     display: flex;
     gap: 10px;
     margin-bottom: 4px;
 }
-
 .arrow {
     width: 12px;
     height: 12px;
     opacity: 0.2;
     transition: all 0.3s;
 }
-
 .active {
     opacity: 1;
     animation: blink 1.2s infinite;
 }
-
 @keyframes blink {
     0% { opacity: 1; filter: drop-shadow(0 0 5px #ff0000); }
     50% { opacity: 0.3; filter: none; }
     100% { opacity: 1; filter: drop-shadow(0 0 5px #ff0000); }
 }
-
 .tooltip {
     visibility: hidden;
     opacity: 0;
@@ -117,14 +168,17 @@
     font-weight: normal;
     white-space: nowrap;
 }
-
 .elevator:hover .tooltip {
     visibility: visible;
     opacity: 1;
 }
-
 .destinationPad { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
 .destinationButton { width: 20px; height: 20px; font-size: 10px; padding: 0; cursor: pointer; }
 .destinationButton:disabled { background-color: #adb5bd; cursor: not-allowed; }
 .callButton { padding: 0.5rem 1rem; border: 1px solid #007bff; background-color: white; color: #007bff; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
 .callButton:hover { background-color: #007bff; color: white; }
+
+@keyframes bg-scroll {
+  0% { transform: translateX(0); }
+  to { transform: translateX(33%); }
+}

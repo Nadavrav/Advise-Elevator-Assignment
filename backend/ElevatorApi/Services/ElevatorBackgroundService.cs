@@ -68,13 +68,11 @@ namespace ElevatorApi.Services
                                 var onTheWayElevator = building
                                     .Elevators.Where(e =>
                                         (
-                                            e.Status == ElevatorStatus.MovingUp
-                                            && e.Direction == Direction.Up
+                                            e.Direction == Direction.Up
                                             && call.RequestedFloor > e.CurrentFloor
                                         )
                                         || (
-                                            e.Status == ElevatorStatus.MovingDown
-                                            && e.Direction == Direction.Down
+                                            e.Direction == Direction.Down
                                             && call.RequestedFloor < e.CurrentFloor
                                         )
                                     )
