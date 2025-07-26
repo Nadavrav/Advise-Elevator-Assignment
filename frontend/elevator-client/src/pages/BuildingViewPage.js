@@ -3,31 +3,31 @@ import { useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import styles from "./BuildingViewPage.module.css";
+import elevatorImage from "../assets/elevator-door.png";
+import arrowUpImage from "../assets/arrow-up.png";
+import arrowDownImage from "../assets/arrow-down.png";
 
 function BuildingViewPage() {
   const { id: buildingId } = useParams();
   const { token } = useAuth();
-
   const [building, setBuilding] = useState(null);
   const [elevators, setElevators] = useState({});
   const [error, setError] = useState(null);
   const [connection, setConnection] = useState(null);
 
- 
   useEffect(() => {
     const fetchBuilding = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_API_BASE_URL}/api/buildings/${buildingId}`,
+          `http://localhost:5009/api/buildings/${buildingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!response.ok) throw new Error("Failed to fetch building details.");
         const data = await response.json();
         setBuilding(data);
-
         const initialElevators = {};
         for (const elevator of data.elevators) {
-          initialElevators[elevator.id] = elevator;
+          initialElevators[elevator.id] = { ...elevator, destinations: [] };
         }
         setElevators(initialElevators);
       } catch (err) {
@@ -39,7 +39,7 @@ function BuildingViewPage() {
 
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl(`${process.env.REACT_APP_API_BASE_URL}/elevatorHub`)
+      .withUrl("http://localhost:5009/elevatorHub")
       .withAutomaticReconnect()
       .build();
     setConnection(newConnection);
@@ -55,7 +55,6 @@ function BuildingViewPage() {
             .invoke("JoinBuildingGroup", buildingId)
             .catch((err) => console.error("Error joining group: ", err));
           connection.on("ReceiveElevatorUpdate", (update) => {
-            console.log("Update received for elevator " + update.id, update);
             setElevators((prev) => ({
               ...prev,
               [update.id]: { ...prev[update.id], ...update },
@@ -71,7 +70,7 @@ function BuildingViewPage() {
 
   const handleCallElevator = async (floor) => {
     try {
-      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/calls`, {
+      await fetch("http://localhost:5009/api/calls", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -89,7 +88,7 @@ function BuildingViewPage() {
 
   const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
-      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/calls/destination`, {
+      await fetch("http://localhost:5009/api/calls/destination", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -101,7 +100,6 @@ function BuildingViewPage() {
           destinationFloor: destinationFloor,
         }),
       });
-      alert(`Destination ${destinationFloor} selected!`);
     } catch (err) {
       alert("Failed to select destination.");
     }
@@ -109,16 +107,18 @@ function BuildingViewPage() {
 
   if (!building) return <div>Loading building...</div>;
 
-  const floors = Array.from({ length: building.numberOfFloors }, (_, i) => i);
+  const floors = Array.from(
+    { length: building.numberOfFloors },
+    (_, i) => building.numberOfFloors - 1 - i
+  );
   const elevatorArray = Object.values(elevators);
 
   const renderElevatorContent = (elevator) => {
     if (elevator.doorStatus === "Open") {
       return (
-        <>
-          <span>E-{elevator.id}</span>
-          <div className={styles.destinationPad}>
-            {floors.map((floor) => (
+        <div className={styles.destinationPad}>
+          {Array.from({ length: building.numberOfFloors }, (_, i) => i).map(
+            (floor) => (
               <button
                 key={floor}
                 onClick={() =>
@@ -129,12 +129,12 @@ function BuildingViewPage() {
               >
                 {floor}
               </button>
-            ))}
-          </div>
-        </>
+            )
+          )}
+        </div>
       );
     }
-    return <span>E-{elevator.id}</span>;
+    return null;
   };
 
   return (
@@ -143,7 +143,6 @@ function BuildingViewPage() {
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <div className={styles.simulationContainer}>
-        {/* Floors Column */}
         <div className={styles.floorsColumn}>
           {floors.map((floorNum) => (
             <div key={floorNum} className={styles.floorLabel}>
@@ -158,7 +157,6 @@ function BuildingViewPage() {
           ))}
         </div>
 
-        {/* Elevator Shafts */}
         <div className={styles.shaftsContainer}>
           {elevatorArray.map((elevator) => (
             <div key={elevator.id} className={styles.shaft}>
@@ -167,14 +165,37 @@ function BuildingViewPage() {
                   elevator.doorStatus === "Open" ? styles.elevatorOpen : ""
                 }`}
                 style={{
-                  transform: `translateY(-${
-                    elevator.currentFloor * (80 + 10)
-                  }px)`, 
-                }}
+                  top: `${
+                    (building.numberOfFloors - 1 - elevator.currentFloor) * 90
+                  }px`,
+                }} // 80px height + 10px gap
               >
+                <div className={styles.indicatorPanel}>
+                  <img
+                    src={arrowUpImage}
+                    alt="Up"
+                    className={`${styles.arrow} ${
+                      elevator.direction === "Up" ? styles.active : ""
+                    }`}
+                  />
+                  <img
+                    src={arrowDownImage}
+                    alt="Down"
+                    className={`${styles.arrow} ${
+                      elevator.direction === "Down" ? styles.active : ""
+                    }`}
+                  />
+                </div>
+                <div
+                  className={styles.elevatorImage}
+                  style={{ backgroundImage: `url(${elevatorImage})` }}
+                ></div>
                 {renderElevatorContent(elevator)}
                 <span className={styles.tooltip}>
                   Floor: {elevator.currentFloor} | Status: {elevator.status}
+                  {elevator.destinations &&
+                    elevator.destinations.length > 0 &&
+                    ` | Destinations: ${elevator.destinations.join(", ")}`}
                 </span>
               </div>
             </div>

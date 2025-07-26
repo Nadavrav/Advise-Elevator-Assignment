@@ -15,7 +15,7 @@
 
 .floorsColumn {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     flex-basis: 200px;
     flex-shrink: 0;
     gap: 10px;
@@ -49,27 +49,78 @@
 
 .elevator {
     width: 90%;
-    height: 80px; 
-    background-color: #6c757d;
-    border: 2px solid #343a40;
-    border-radius: 4px;
+    height: 80px;
     color: white;
     font-weight: bold;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    
+    justify-content: flex-start;
+    padding-top: 5px;
     position: absolute;
-    bottom: 0;
     left: 5%;
-    
-    
-    transition: transform 0.5s ease-in-out;
+    transition: top 0.5s ease-in-out;
 }
 
-.elevatorOpen {
-    background-color: #17a2b8;
+.elevatorImage {
+    width: 80%;
+    height: 80%;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 4px;
+}
+
+.elevatorOpen .elevatorImage {
+    box-shadow: 0 0 15px 5px #17a2b8;
+}
+
+.indicatorPanel {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 4px;
+}
+
+.arrow {
+    width: 12px;
+    height: 12px;
+    opacity: 0.2;
+    transition: all 0.3s;
+}
+
+.active {
+    opacity: 1;
+    animation: blink 1.2s infinite;
+}
+
+@keyframes blink {
+    0% { opacity: 1; filter: drop-shadow(0 0 5px #ff0000); }
+    50% { opacity: 0.3; filter: none; }
+    100% { opacity: 1; filter: drop-shadow(0 0 5px #ff0000); }
+}
+
+.tooltip {
+    visibility: hidden;
+    opacity: 0;
+    background-color: #343a40;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 12px;
+    position: absolute;
+    z-index: 1;
+    bottom: 105%;
+    left: 50%;
+    transform: translateX(-50%);
+    transition: opacity 0.3s;
+    font-size: 0.9rem;
+    font-weight: normal;
+    white-space: nowrap;
+}
+
+.elevator:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
 }
 
 .destinationPad { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 2px; justify-content: center; }
@@ -77,28 +128,3 @@
 .destinationButton:disabled { background-color: #adb5bd; cursor: not-allowed; }
 .callButton { padding: 0.5rem 1rem; border: 1px solid #007bff; background-color: white; color: #007bff; border-radius: 4px; cursor: pointer; transition: all 0.2s; }
 .callButton:hover { background-color: #007bff; color: white; }
-
-.tooltip {
-  visibility: hidden;
-  opacity: 0;
-  width: 200px;
-  background-color: #343a40;
-  color: #fff;
-  text-align: center;
-  border-radius: 6px;
-  padding: 8px;
-  position: absolute;
-  z-index: 1;
-  bottom: 105%; 
-  left: 50%;
-  margin-left: -100px; 
-  transition: opacity 0.3s;
-  font-size: 0.9rem;
-  font-weight: normal;
-  white-space: nowrap;
-}
-
-.elevator:hover .tooltip {
-  visibility: visible;
-  opacity: 1;
-}
