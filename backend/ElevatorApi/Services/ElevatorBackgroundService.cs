@@ -60,7 +60,6 @@ namespace ElevatorApi.Services
                                 .OrderBy(c => c.CallTime)
                                 .ToListAsync(stoppingToken);
 
-                            // --- UNIFIED DISPATCHER LOGIC ---
                             foreach (var call in pendingCalls)
                             {
                                 Elevator bestElevator = null;
@@ -126,7 +125,6 @@ namespace ElevatorApi.Services
                                 }
                             }
 
-                            // --- STATE MACHINE LOGIC ---
                             foreach (var elevator in building.Elevators)
                             {
                                 _elevatorDestinations.TryAdd(elevator.Id, new List<int>());

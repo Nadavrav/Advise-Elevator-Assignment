@@ -5,7 +5,6 @@
     font-family: sans-serif;
 }
 
-/* --- Animated Back Button Styles --- */
 .animatedBackButton,
 .animatedBackButton *,
 .animatedBackButton :after,
@@ -69,7 +68,6 @@
 }
 .animatedBackButton:active:before { background-color: #fff; }
 
-/* --- Main Styles --- */
 .simulationContainer {
     display: flex;
     gap: 1rem;

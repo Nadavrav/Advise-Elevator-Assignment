@@ -4,13 +4,11 @@ import { useAuth } from "../context/AuthContext";
 import { HubConnectionBuilder } from "@microsoft/signalr";
 import styles from "./BuildingViewPage.module.css";
 
-// Corrected import path
 import elevatorImage from "../assets/elevator-door.png";
 import arrowUpImage from "../assets/arrow-up.png";
 import arrowDownImage from "../assets/arrow-down.png";
 
 function BuildingViewPage() {
-  // ... (All logic inside the component remains the same)
   const { id: buildingId } = useParams();
   const { token } = useAuth();
   const [building, setBuilding] = useState(null);
@@ -137,7 +135,6 @@ function BuildingViewPage() {
 
   return (
     <div className={styles.pageContainer}>
-      {/* Corrected Link component for the animated button */}
       <Link to="/dashboard" className={styles.animatedBackButton}>
         <span>&larr; Back to Dashboard</span>
       </Link>
