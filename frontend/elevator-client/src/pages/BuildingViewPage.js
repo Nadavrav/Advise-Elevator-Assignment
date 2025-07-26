@@ -21,7 +21,7 @@ function BuildingViewPage() {
     const fetchBuilding = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5009/api/buildings/${buildingId}`,
+          `${process.env.REACT_APP_API_BASE_URL}/api/buildings/${buildingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!response.ok) throw new Error("Failed to fetch building details.");
@@ -40,7 +40,7 @@ function BuildingViewPage() {
   }, [buildingId, token]);
   useEffect(() => {
     const newConnection = new HubConnectionBuilder()
-      .withUrl("http://localhost:5009/elevatorHub")
+      .withUrl(`${process.env.REACT_APP_API_BASE_URL}/elevatorHub`)
       .withAutomaticReconnect()
       .build();
     setConnection(newConnection);
@@ -69,7 +69,7 @@ function BuildingViewPage() {
   }, [connection, buildingId]);
   const handleCallElevator = async (floor) => {
     try {
-      await fetch("http://localhost:5009/api/calls", {
+      await fetch(`${process.env.REACT_APP_API_BASE_URL}/api/calls`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -86,18 +86,21 @@ function BuildingViewPage() {
   };
   const handleSelectDestination = async (pickupFloor, destinationFloor) => {
     try {
-      await fetch("http://localhost:5009/api/calls/destination", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          buildingId: parseInt(buildingId),
-          pickupFloor: pickupFloor,
-          destinationFloor: destinationFloor,
-        }),
-      });
+      await fetch(
+        `${process.env.REACT_APP_API_BASE_URL}/api/calls/destination`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            buildingId: parseInt(buildingId),
+            pickupFloor: pickupFloor,
+            destinationFloor: destinationFloor,
+          }),
+        }
+      );
     } catch (err) {
       alert("Failed to select destination.");
     }
